@@ -1,0 +1,639 @@
+
+<h2 class="sr-only">孕期养护模块</h2>
+
+<style>
+  :root {
+    --coral: #d85a30;
+    --coral-light: #FAECE7;
+    --coral-mid: #F0997B;
+    --coral-border: rgba(216,90,48,0.18);
+    --teal: #1D9E75;
+    --teal-light: #E1F5EE;
+    --teal-border: rgba(29,158,117,0.18);
+    --purple: #7f77dd;
+    --purple-light: #EEEDFE;
+    --amber: #ba7517;
+    --amber-light: #FAEEDA;
+  }
+
+  .preg-wrap { padding: 1rem 0; font-family: var(--font-sans); }
+
+  .preg-tabs { display: flex; gap: 6px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .preg-tab {
+    padding: 6px 14px; border-radius: var(--border-radius-md);
+    border: 0.5px solid var(--color-border-tertiary);
+    background: var(--color-background-secondary);
+    color: var(--color-text-secondary); font-size: 13px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .preg-tab.active {
+    background: var(--coral-light); border-color: var(--coral);
+    color: #712B13; font-weight: 500;
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Timeline */
+  .trimester-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+  .tri-card {
+    border-radius: var(--border-radius-lg); padding: 14px 16px;
+    border: 0.5px solid var(--color-border-tertiary);
+    background: var(--color-background-primary);
+  }
+  .tri-card.active { border-color: var(--coral); background: var(--coral-light); }
+  .tri-label { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 4px; }
+  .tri-weeks { font-size: 18px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 6px; }
+  .tri-card.active .tri-weeks { color: #712B13; }
+  .tri-progress { height: 4px; background: var(--color-border-tertiary); border-radius: 2px; overflow: hidden; margin-bottom: 8px; }
+  .tri-fill { height: 100%; border-radius: 2px; background: var(--coral); }
+  .tri-tags { display: flex; flex-direction: column; gap: 3px; }
+  .tri-tag { font-size: 11px; color: var(--color-text-secondary); }
+
+  /* Checkups */
+  .checkup-list { display: flex; flex-direction: column; gap: 8px; }
+  .checkup-item {
+    display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px;
+    border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-tertiary);
+    background: var(--color-background-primary);
+  }
+  .checkup-week {
+    font-size: 11px; font-weight: 500; padding: 3px 8px;
+    border-radius: var(--border-radius-md); white-space: nowrap;
+    min-width: 52px; text-align: center;
+  }
+  .wk-done { background: var(--teal-light); color: #085041; }
+  .wk-next { background: var(--coral-light); color: #712B13; }
+  .wk-upcoming { background: var(--color-background-secondary); color: var(--color-text-secondary); }
+  .checkup-info { flex: 1; }
+  .checkup-name { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 3px; }
+  .checkup-desc { font-size: 12px; color: var(--color-text-secondary); }
+  .checkup-status { font-size: 11px; }
+
+  /* Body tracking */
+  .track-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.5rem; }
+  .track-card {
+    border-radius: var(--border-radius-lg); padding: 14px 16px;
+    border: 0.5px solid var(--color-border-tertiary);
+    background: var(--color-background-primary);
+  }
+  .track-label { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 6px; }
+  .track-value { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+  .track-unit { font-size: 13px; color: var(--color-text-secondary); margin-left: 3px; }
+  .track-range { font-size: 11px; color: var(--color-text-secondary); margin-top: 4px; }
+  .track-bar { height: 4px; background: var(--color-border-tertiary); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+  .track-fill-g { height: 100%; border-radius: 2px; background: #1D9E75; }
+  .track-fill-w { height: 100%; border-radius: 2px; background: var(--amber); }
+
+  .symptom-log { display: flex; flex-direction: column; gap: 6px; }
+  .symptom-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; border-radius: var(--border-radius-md);
+    border: 0.5px solid var(--color-border-tertiary);
+    background: var(--color-background-primary);
+  }
+  .symptom-name { font-size: 13px; color: var(--color-text-primary); }
+  .severity-dots { display: flex; gap: 4px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--color-border-secondary); }
+  .dot.filled-r { background: var(--coral); border-color: var(--coral); }
+  .dot.filled-g { background: var(--teal); border-color: var(--teal); }
+  .dot.filled-a { background: var(--amber); border-color: var(--amber); }
+  .symptom-note { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+
+  /* 待产包 */
+  .kit-section { margin-bottom: 1.5rem; }
+  .kit-section-title {
+    font-size: 12px; font-weight: 500; color: var(--color-text-secondary);
+    margin-bottom: 8px; padding-bottom: 6px;
+    border-bottom: 0.5px solid var(--color-border-tertiary);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .kit-phase { font-size: 11px; padding: 2px 8px; border-radius: var(--border-radius-md); }
+  .phase-early { background: var(--purple-light); color: #3C3489; }
+  .phase-mid { background: var(--amber-light); color: #633806; }
+  .phase-late { background: var(--coral-light); color: #712B13; }
+  .kit-items { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .kit-item {
+    display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+    border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-tertiary);
+    background: var(--color-background-primary); cursor: pointer;
+    transition: background 0.15s;
+  }
+  .kit-item:hover { background: var(--color-background-secondary); }
+  .kit-check { width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--color-border-secondary); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .kit-check.checked { background: var(--teal); border-color: var(--teal); }
+  .kit-check.checked::after { content: ''; display: block; width: 5px; height: 3px; border-left: 1.5px solid white; border-bottom: 1.5px solid white; transform: rotate(-45deg) translateY(-1px); }
+  .kit-item-name { font-size: 12px; color: var(--color-text-primary); }
+  .kit-progress { font-size: 11px; color: var(--color-text-secondary); }
+
+  /* week slider */
+  .week-control { display: flex; align-items: center; gap: 12px; margin-bottom: 1rem; }
+  .week-num { font-size: 20px; font-weight: 500; color: var(--color-text-primary); min-width: 60px; }
+  .week-sub { font-size: 12px; color: var(--color-text-secondary); }
+  .baby-size-card {
+    display: flex; align-items: center; gap: 14px; padding: 14px 16px;
+    border-radius: var(--border-radius-lg); border: 0.5px solid var(--coral-border);
+    background: var(--coral-light); margin-bottom: 1.5rem;
+  }
+  .baby-emoji { font-size: 28px; width: 44px; text-align: center; }
+  .baby-info { flex: 1; }
+  .baby-week-title { font-size: 13px; font-weight: 500; color: #712B13; margin-bottom: 4px; }
+  .baby-week-desc { font-size: 12px; color: #993C1D; line-height: 1.5; }
+
+  .section-title { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); margin-bottom: 10px; letter-spacing: 0.04em; text-transform: uppercase; }
+
+  .inline-input {
+    width: 88px; padding: 4px 6px; font-size: 12px;
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-sm);
+    background: var(--color-background-primary);
+    color: var(--color-text-primary);
+  }
+  .inline-btn {
+    margin-left: 6px; padding: 4px 8px; font-size: 11px;
+    border-radius: var(--border-radius-sm);
+    border: 0.5px solid var(--coral-border);
+    background: var(--coral-light); color: #712B13; cursor: pointer;
+  }
+  .warn-card {
+    border-radius: var(--border-radius-lg); padding: 14px 16px; margin-bottom: 10px;
+    border: 0.5px solid var(--color-border-tertiary); background: var(--color-background-primary);
+  }
+  .warn-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 6px; }
+  .warn-list { margin: 0; padding-left: 16px; display: grid; gap: 4px; }
+  .warn-list li { font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; }
+</style>
+
+<div class="preg-wrap">
+
+  <div class="preg-tabs">
+    <div class="preg-tab active" onclick="switchTab('timeline')">孕期时间轴</div>
+    <div class="preg-tab" onclick="switchTab('checkup')">产检里程碑</div>
+    <div class="preg-tab" onclick="switchTab('body')">身体监测</div>
+    <div class="preg-tab" onclick="switchTab('safety')">孕期禁忌</div>
+    <div class="preg-tab" onclick="switchTab('kit')">待产包清单</div>
+  </div>
+
+  <!-- TAB 1: Timeline -->
+  <div id="tab-timeline" class="tab-panel active">
+    <div class="week-control">
+      <div>
+        <div class="week-num">第 <span id="wk-display">12</span> 周</div>
+        <div class="week-sub">当前孕周（可拖动调整）</div>
+      </div>
+      <input type="range" min="1" max="40" value="12" id="week-slider" style="flex:1;" oninput="updateWeek(this.value)">
+    </div>
+
+    <div id="baby-card" class="baby-size-card">
+      <div class="baby-emoji" id="baby-emoji">🍋</div>
+      <div class="baby-info">
+        <div class="baby-week-title" id="baby-title">第12周 · 柠檬大小</div>
+        <div class="baby-week-desc" id="baby-desc">宝宝约5.4cm，所有器官已基本成形，进入相对稳定的孕中期。早孕反应逐渐减轻。</div>
+      </div>
+    </div>
+
+    <div class="trimester-row">
+      <div class="tri-card" id="tri1">
+        <div class="tri-label">孕早期</div>
+        <div class="tri-weeks">1 – 13 周</div>
+        <div class="tri-progress"><div class="tri-fill" id="tri1-fill" style="width:0%"></div></div>
+        <div class="tri-tags">
+          <div class="tri-tag">· 确认妊娠，建卡</div>
+          <div class="tri-tag">· NT 超声筛查</div>
+          <div class="tri-tag">· 叶酸补充</div>
+        </div>
+      </div>
+      <div class="tri-card" id="tri2">
+        <div class="tri-label">孕中期</div>
+        <div class="tri-weeks">14 – 27 周</div>
+        <div class="tri-progress"><div class="tri-fill" id="tri2-fill" style="width:0%"></div></div>
+        <div class="tri-tags">
+          <div class="tri-tag">· 唐氏筛查 / NIPT</div>
+          <div class="tri-tag">· 四维彩超</div>
+          <div class="tri-tag">· 糖耐量测试</div>
+        </div>
+      </div>
+      <div class="tri-card" id="tri3">
+        <div class="tri-label">孕晚期</div>
+        <div class="tri-weeks">28 – 40 周</div>
+        <div class="tri-progress"><div class="tri-fill" id="tri3-fill" style="width:0%"></div></div>
+        <div class="tri-tags">
+          <div class="tri-tag">· 胎心监护</div>
+          <div class="tri-tag">· B族链球菌检查</div>
+          <div class="tri-tag">· 分娩计划</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">本阶段注意事项</div>
+    <div id="tips-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+  </div>
+
+  <!-- TAB 2: Checkups -->
+  <div id="tab-checkup" class="tab-panel">
+    <div class="section-title" style="margin-bottom:12px;">关键产检节点 · 按孕周排列</div>
+    <div class="checkup-list" id="checkup-list"></div>
+  </div>
+
+  <!-- TAB 3: Body tracking -->
+  <div id="tab-body" class="tab-panel">
+    <div class="section-title">指标快照</div>
+    <div class="track-grid">
+      <div class="track-card">
+        <div class="track-label">孕前体重基准</div>
+        <div>
+          <span class="track-value" id="prepreg-value">--</span><span class="track-unit">kg</span>
+        </div>
+        <div style="margin-top:8px;">
+          <input id="prepreg-input" type="number" step="0.1" min="35" max="120" class="inline-input" placeholder="首次填写">
+          <button class="inline-btn" onclick="savePrePregWeight()">保存基准</button>
+          <button class="inline-btn" onclick="resetPrePregWeight()">重置</button>
+        </div>
+        <div class="track-range" id="bmi-range-text">首次打开请手动填写孕前体重基准</div>
+        <div class="track-bar"><div class="track-fill-g" id="bmi-fill" style="width:0%"></div></div>
+      </div>
+      <div class="track-card">
+        <div class="track-label">推荐增重范围</div>
+        <div><span class="track-value" id="gain-min">--</span><span class="track-unit">–<span id="gain-max">--</span> kg</span></div>
+        <div class="track-range" id="gain-range-text">将根据孕前体重基准 + 当前孕周自动计算</div>
+        <div class="track-bar"><div class="track-fill-w" id="gain-fill" style="width:0%"></div></div>
+      </div>
+      <div class="track-card">
+        <div class="track-label">血压正常参考</div>
+        <div><span class="track-value" style="font-size:16px">&lt;140/90</span><span class="track-unit">mmHg</span></div>
+        <div class="track-range">高于此值需立即就诊</div>
+        <div class="track-bar"><div class="track-fill-g" style="width:70%"></div></div>
+      </div>
+      <div class="track-card">
+        <div class="track-label">胎动计数（28周后）</div>
+        <div><span class="track-value">10</span><span class="track-unit">次/2h</span></div>
+        <div class="track-range">低于10次需告知医生</div>
+        <div class="track-bar"><div class="track-fill-g" style="width:80%"></div></div>
+      </div>
+    </div>
+
+    <div class="section-title">常见症状自查</div>
+    <div class="symptom-log">
+      <div class="symptom-row">
+        <div>
+          <div class="symptom-name">孕吐 / 恶心</div>
+          <div class="symptom-note">早期多见，少食多餐可缓解</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px;text-align:right">严重程度</div>
+          <div class="severity-dots">
+            <div class="dot filled-r"></div><div class="dot filled-r"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          </div>
+        </div>
+      </div>
+      <div class="symptom-row">
+        <div>
+          <div class="symptom-name">水肿（脚踝/手）</div>
+          <div class="symptom-note">轻度正常，若手脸浮肿需查血压</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px;text-align:right">严重程度</div>
+          <div class="severity-dots">
+            <div class="dot filled-a"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          </div>
+        </div>
+      </div>
+      <div class="symptom-row">
+        <div>
+          <div class="symptom-name">腰背痛</div>
+          <div class="symptom-note">中晚期常见，托腹带可辅助</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px;text-align:right">严重程度</div>
+          <div class="severity-dots">
+            <div class="dot filled-a"></div><div class="dot filled-a"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          </div>
+        </div>
+      </div>
+      <div class="symptom-row" style="border-color: rgba(226,75,74,0.25); background: rgba(252,235,235,0.4);">
+        <div>
+          <div class="symptom-name" style="color:#A32D2D">⚠ 立即就医信号</div>
+          <div class="symptom-note">阴道出血、剧烈腹痛、胎动消失超12h、视觉模糊</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: Safety -->
+  <div id="tab-safety" class="tab-panel">
+    <div class="section-title" style="margin-bottom:12px;">孕妇禁忌与建议方案</div>
+    <div class="warn-card" style="border-color:rgba(226,75,74,0.25);background:rgba(252,235,235,0.4);">
+      <div class="warn-title" style="color:#A32D2D;">⚠ 必须严格避免</div>
+      <ul class="warn-list">
+        <li>酒精：孕期任何阶段均不建议饮酒。</li>
+        <li>吸烟与二手烟：显著增加流产、早产与低体重儿风险。</li>
+        <li>不明成分中药/保健品：先与产科医生确认。</li>
+        <li>麝香及强刺激性香精环境：避免长时间接触。</li>
+      </ul>
+    </div>
+    <div class="warn-card">
+      <div class="warn-title">饮食禁忌（重点）</div>
+      <ul class="warn-list">
+        <li>生食或半生食：刺身、生蛋、生腌海鲜、生肉。</li>
+        <li>高汞鱼类：旗鱼、鲨鱼等摄入要避免或严格限量。</li>
+        <li>姑娘果（灯笼果）等不确定安全性食物：孕期谨慎，建议避免。</li>
+        <li>未巴氏消毒奶制品与霉变食品：避免李斯特菌风险。</li>
+      </ul>
+    </div>
+    <div class="warn-card">
+      <div class="warn-title">用药原则</div>
+      <ul class="warn-list">
+        <li>所有口服/外用/中成药，先问产科医生再用。</li>
+        <li>发热、咳嗽、过敏时，不自行叠加多种感冒药。</li>
+        <li>就诊时主动告知“已怀孕 + 当前孕周”。</li>
+      </ul>
+    </div>
+    <div class="warn-card">
+      <div class="warn-title">推荐作息</div>
+      <ul class="warn-list">
+        <li>保证 7–9 小时睡眠，尽量固定入睡时间。</li>
+        <li>中午可小睡 20–30 分钟，减少疲劳与水肿。</li>
+        <li>晚期建议左侧卧位，改善子宫胎盘供血。</li>
+      </ul>
+    </div>
+    <div class="warn-card">
+      <div class="warn-title">推荐健身方案（无并发症前提）</div>
+      <ul class="warn-list">
+        <li>每周 5 天、每天 20–30 分钟中低强度快走。</li>
+        <li>孕妇瑜伽/拉伸每周 2–3 次，避免憋气和高冲击动作。</li>
+        <li>盆底肌训练（凯格尔）循序渐进；出现宫缩/出血立即停止并就医。</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- TAB 5: Kit -->
+  <div id="tab-kit" class="tab-panel">
+    <div id="kit-progress-bar" style="margin-bottom:1.5rem;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+        <span style="font-size:12px;color:var(--color-text-secondary)">待产包准备进度</span>
+        <span style="font-size:12px;font-weight:500;color:var(--color-text-primary)" id="kit-pct">0 / 24 项</span>
+      </div>
+      <div style="height:6px;background:var(--color-border-tertiary);border-radius:3px;overflow:hidden;">
+        <div id="kit-bar" style="height:100%;border-radius:3px;background:var(--teal);width:0%;transition:width 0.3s;"></div>
+      </div>
+    </div>
+
+    <div id="kit-sections"></div>
+  </div>
+
+</div>
+
+<script>
+const weekData = {
+  1:  { emoji:'🫘', title:'第1–4周 · 芝麻大', desc:'受精卵着床，HCG开始升高。注意是否有异常出血，避免剧烈运动。' },
+  5:  { emoji:'🫐', title:'第5–8周 · 蓝莓大', desc:'心脏开始跳动，早孕反应出现。可开始补充叶酸0.4mg/天，戒烟酒咖啡因。' },
+  9:  { emoji:'🍇', title:'第9–12周 · 青梅大', desc:'主要器官形成中。NT超声安排在11–13+6周，记得预约。' },
+  12: { emoji:'🍋', title:'第12周 · 柠檬大', desc:'宝宝约5.4cm，器官基本成形，进入相对稳定阶段。早孕反应逐渐减轻。' },
+  16: { emoji:'🥑', title:'第16周 · 牛油果大', desc:'可能开始感受到胎动。唐筛或NIPT安排在15–20周，注意查报告。' },
+  20: { emoji:'🍌', title:'第20周 · 香蕉大', desc:'四维彩超黄金窗口期（20–24周）。宝宝听力发育，可以开始胎教音乐。' },
+  24: { emoji:'🌽', title:'第24周 · 玉米长', desc:'糖耐量测试（OGTT）安排在24–28周。注意控制饮食中精制糖和精制碳水。' },
+  28: { emoji:'🥦', title:'第28周 · 花椰菜大', desc:'进入孕晚期，每2周一次产检。28周后每天计数胎动，正常应≥10次/2小时。' },
+  32: { emoji:'🥝', title:'第32周 · 一个哈密瓜', desc:'胎位基本确定，开始关注胎位是否头位。开始准备待产包，预选医院。' },
+  36: { emoji:'🍈', title:'第36周 · 蜜瓜大', desc:'每周一次产检。B族链球菌检查（GBS）安排在35–37周。讨论分娩计划。' },
+  40: { emoji:'🎃', title:'第40周 · 南瓜大', desc:'足月！随时准备入院。宫缩规律（每5分钟一次，持续1分钟）时立刻出发。' }
+};
+
+const tips = {
+  early: ['每天补充叶酸 0.4mg（医嘱剂量）', '避免接触猫狗粪便（弓形虫风险）', '孕早期避免高强度运动，散步、孕妇瑜伽可继续', '远离烟草、酒精、生食（刺身、生鸡蛋）', '如服用任何药物，先咨询产科医生'],
+  mid: ['开始佩戴托腹带，减轻腰背压力', '左侧卧位睡眠更利于子宫供血', '保持每日散步30分钟，避免久坐久站', '补充钙质（约1000mg/天），可从奶制品获取', '记录每次产检报告，保存影像资料'],
+  late: ['28周起每日计数胎动，低于10次/2小时需就诊', '准备好入院文件袋（身份证、医保卡、产检记录）', '学习拉梅兹呼吸法，减轻分娩疼痛感', '每周量一次血压，警惕妊娠高血压', '待产包准备完毕，放在门口随时可取']
+};
+
+const checkups = [
+  { week: '6–8周', start: 6, end: 8, name: '早孕确认 + 建档', desc: '经阴道超声确认宫内妊娠，排除宫外孕；建立孕期档案' },
+  { week: '11–13+6', start: 11, end: 14, name: 'NT 超声筛查', desc: '测量胎儿颈部透明层厚度，排查染色体异常风险' },
+  { week: '15–20周', start: 15, end: 20, name: '唐氏筛查 / NIPT', desc: 'NIPT（无创DNA）准确率更高，价格约1500–3000元' },
+  { week: '20–24周', start: 20, end: 24, name: '四维彩超', desc: '系统排畸超声，黄金窗口期，建议提前预约' },
+  { week: '24–28周', start: 24, end: 28, name: 'OGTT 糖耐量测试', desc: '空腹抽血后服糖水，检测妊娠期糖尿病' },
+  { week: '28周起', start: 28, end: 40, name: '胎心监护（NST）', desc: '每次产检均会进行，监测宫缩和胎心变化' },
+  { week: '35–37周', start: 35, end: 37, name: 'GBS 链球菌筛查', desc: '阴道/直肠拭子，阳性者分娩时需静脉使用抗生素' },
+  { week: '36–40周', start: 36, end: 40, name: '分娩前评估', desc: '确认胎位（头位/臀位）、骨盆测量、确定分娩方式' }
+];
+
+const kitData = [
+  { phase: '孕早中期备好', phaseClass: 'phase-early', items: ['叶酸/孕期综合维生素', '托腹带', '孕妇防辐射服', '孕妇枕', '妊娠纹油/乳液', '孕期检查档案袋'] },
+  { phase: '孕32–36周备好', phaseClass: 'phase-mid', items: ['产妇哺乳内衣 x3', '产褥垫 x10', '一次性内裤', '婴儿连体衣（0–3月 x3）', '包被/抱被', '纸尿裤（NB码 x2包）'] },
+  { phase: '入院包（随时可取）', phaseClass: 'phase-late', items: ['身份证 + 医保卡', '产检记录本', '住院押金（预留5000+）', '产妇拖鞋 + 袜子', '吸管杯', '待产零食', '手机充电器', '婴儿第一套回家衣', '出院推车/安全座椅', '尿垫 + 湿巾', '婴儿沐浴露/护肤', '哺乳期专用文胸'] }
+];
+
+let checkedItems = new Set();
+let currentWeek = 12;
+const userHeightM = 1.62;
+const prePregStorageKey = 'preg-pre-weight';
+let prePregWeight = null;
+
+function switchTab(t) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.preg-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function getWeekSnap(w) {
+  const keys = Object.keys(weekData).map(Number).sort((a,b)=>a-b);
+  let chosen = keys[0];
+  for (const k of keys) { if (w >= k) chosen = k; }
+  return weekData[chosen];
+}
+
+function updateWeek(w) {
+  w = parseInt(w);
+  currentWeek = w;
+  document.getElementById('wk-display').textContent = w;
+  const snap = getWeekSnap(w);
+  document.getElementById('baby-emoji').textContent = snap.emoji;
+  document.getElementById('baby-title').textContent = snap.title;
+  document.getElementById('baby-desc').textContent = snap.desc;
+
+  const t1 = Math.min(Math.max((w-1)/(13-1)*100, 0), 100);
+  const t2 = w < 14 ? 0 : Math.min(Math.max((w-14)/(27-14)*100, 0), 100);
+  const t3 = w < 28 ? 0 : Math.min(Math.max((w-28)/(40-28)*100, 0), 100);
+  document.getElementById('tri1-fill').style.width = t1+'%';
+  document.getElementById('tri2-fill').style.width = t2+'%';
+  document.getElementById('tri3-fill').style.width = t3+'%';
+
+  ['tri1','tri2','tri3'].forEach(id => document.getElementById(id).classList.remove('active'));
+  if (w <= 13) document.getElementById('tri1').classList.add('active');
+  else if (w <= 27) document.getElementById('tri2').classList.add('active');
+  else document.getElementById('tri3').classList.add('active');
+
+  const phase = w <= 13 ? 'early' : w <= 27 ? 'mid' : 'late';
+  const tipEl = document.getElementById('tips-list');
+  tipEl.innerHTML = tips[phase].map(t =>
+    `<div style="display:flex;align-items:flex-start;gap:8px;padding:9px 13px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);font-size:13px;color:var(--color-text-primary);">
+      <span style="color:var(--teal);font-size:14px;line-height:1.4;">✓</span>${t}
+    </div>`
+  ).join('');
+
+  renderCheckups();
+  updateWeightGuidance();
+}
+
+function renderCheckups() {
+  const el = document.getElementById('checkup-list');
+  let nearestIdx = -1;
+  let nearestStart = Infinity;
+  checkups.forEach((c, i) => {
+    if (currentWeek < c.start && c.start < nearestStart) {
+      nearestStart = c.start;
+      nearestIdx = i;
+    }
+  });
+
+  el.innerHTML = checkups.map((c, i) => {
+    let cls = 'wk-upcoming';
+    let label = '待安排';
+
+    if (currentWeek > c.end) {
+      cls = 'wk-done';
+      label = '已完成';
+    } else if (currentWeek >= c.start && currentWeek <= c.end) {
+      cls = 'wk-next';
+      label = '本周重点';
+    } else if (i === nearestIdx) {
+      cls = 'wk-next';
+      label = '即将到来';
+    }
+
+    return `<div class="checkup-item">
+      <div class="checkup-week ${cls}">${c.week}</div>
+      <div class="checkup-info">
+        <div class="checkup-name">${c.name}</div>
+        <div class="checkup-desc">${c.desc}</div>
+      </div>
+      <span style="font-size:11px;padding:2px 8px;border-radius:4px;" class="${cls}">${label}</span>
+    </div>`;
+  }).join('');
+}
+
+function getBmiCategory(weightKg) {
+  const bmi = weightKg / (userHeightM * userHeightM);
+  if (bmi < 18.5) return { key: 'low', bmi, text: '偏瘦' };
+  if (bmi < 25) return { key: 'normal', bmi, text: '正常' };
+  if (bmi < 30) return { key: 'high', bmi, text: '超重' };
+  return { key: 'obese', bmi, text: '肥胖' };
+}
+
+function getGainRangeByWeek(week, bmiKey) {
+  const config = {
+    low: { total: [12.5, 18], weekly: [0.44, 0.58] },
+    normal: { total: [11.5, 16], weekly: [0.35, 0.5] },
+    high: { total: [7, 11.5], weekly: [0.23, 0.33] },
+    obese: { total: [5, 9], weekly: [0.17, 0.27] }
+  }[bmiKey];
+
+  if (week <= 13) return { min: 0.5, max: 2, totalMax: config.total[1] };
+  const wkAfter13 = week - 13;
+  const min = 1 + config.weekly[0] * wkAfter13;
+  const max = 2 + config.weekly[1] * wkAfter13;
+  return { min: Math.max(0.5, min), max: Math.min(config.total[1], max), totalMax: config.total[1] };
+}
+
+function updateWeightGuidance() {
+  const baseEl = document.getElementById('prepreg-value');
+  const bmiText = document.getElementById('bmi-range-text');
+  const bmiFill = document.getElementById('bmi-fill');
+  const minEl = document.getElementById('gain-min');
+  const maxEl = document.getElementById('gain-max');
+  const gainText = document.getElementById('gain-range-text');
+  const gainFill = document.getElementById('gain-fill');
+
+  if (!prePregWeight) {
+    baseEl.textContent = '--';
+    bmiText.textContent = '首次打开请手动填写孕前体重基准';
+    minEl.textContent = '--';
+    maxEl.textContent = '--';
+    gainText.textContent = '将根据孕前体重基准 + 当前孕周自动计算';
+    bmiFill.style.width = '0%';
+    gainFill.style.width = '0%';
+    return;
+  }
+
+  baseEl.textContent = prePregWeight.toFixed(1);
+  const bmiInfo = getBmiCategory(prePregWeight);
+  const range = getGainRangeByWeek(currentWeek, bmiInfo.key);
+  const bmiPct = Math.max(0, Math.min((bmiInfo.bmi / 32) * 100, 100));
+  const gainPct = Math.max(0, Math.min((range.max / range.totalMax) * 100, 100));
+
+  bmiText.textContent = `BMI ${bmiInfo.bmi.toFixed(1)}（${bmiInfo.text}）· 身高按 ${userHeightM}m 估算`;
+  minEl.textContent = range.min.toFixed(1);
+  maxEl.textContent = range.max.toFixed(1);
+  gainText.textContent = `第${currentWeek}周建议累计增重范围（会随孕周变化）`;
+  bmiFill.style.width = bmiPct.toFixed(0) + '%';
+  gainFill.style.width = gainPct.toFixed(0) + '%';
+}
+
+function savePrePregWeight() {
+  const input = document.getElementById('prepreg-input');
+  const v = parseFloat(input.value);
+  if (Number.isNaN(v) || v < 35 || v > 120) {
+    alert('请输入 35–120kg 的有效孕前体重');
+    return;
+  }
+  prePregWeight = v;
+  localStorage.setItem(prePregStorageKey, String(v));
+  updateWeightGuidance();
+}
+
+function resetPrePregWeight() {
+  prePregWeight = null;
+  localStorage.removeItem(prePregStorageKey);
+  document.getElementById('prepreg-input').value = '';
+  updateWeightGuidance();
+}
+
+function initPrePregWeight() {
+  const cached = parseFloat(localStorage.getItem(prePregStorageKey) || '');
+  if (!Number.isNaN(cached)) {
+    prePregWeight = cached;
+    document.getElementById('prepreg-input').value = cached;
+  }
+  updateWeightGuidance();
+}
+
+function updateKitProgress() {
+  const total = kitData.reduce((s, sec) => s + sec.items.length, 0);
+  const done = checkedItems.size;
+  document.getElementById('kit-pct').textContent = done + ' / ' + total + ' 项';
+  document.getElementById('kit-bar').style.width = Math.round(done/total*100) + '%';
+}
+
+function toggleKit(sectionIdx, itemIdx, el) {
+  const key = sectionIdx + '-' + itemIdx;
+  const check = el.querySelector('.kit-check');
+  if (checkedItems.has(key)) { checkedItems.delete(key); check.classList.remove('checked'); }
+  else { checkedItems.add(key); check.classList.add('checked'); }
+  updateKitProgress();
+}
+
+function renderKit() {
+  const el = document.getElementById('kit-sections');
+  el.innerHTML = kitData.map((sec, si) =>
+    `<div class="kit-section">
+      <div class="kit-section-title">
+        ${sec.phase}
+        <span class="kit-phase ${sec.phaseClass}">${si===0?'孕期':si===1?'32–36周':'入院包'}</span>
+      </div>
+      <div class="kit-items">
+        ${sec.items.map((item, ii) =>
+          `<div class="kit-item" onclick="toggleKit(${si},${ii},this)">
+            <div class="kit-check"></div>
+            <span class="kit-item-name">${item}</span>
+          </div>`
+        ).join('')}
+      </div>
+    </div>`
+  ).join('');
+  updateKitProgress();
+}
+
+renderCheckups();
+renderKit();
+initPrePregWeight();
+setTimeout(() => updateWeek(12), 400);
+</script>
